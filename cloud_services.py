@@ -5,12 +5,8 @@ import logging
 import json
 from datetime import datetime
 
-# Import necessary config values
 from config import AWS_REGION, S3_BUCKET_NAME, FIREHOSE_STREAM_NAME
 
-# Initialize clients globally or within functions as needed
-# Global initialization can save time if functions are called frequently
-# Ensure thread safety if clients are shared and methods aren't thread-safe (boto3 clients generally are)
 try:
     if AWS_REGION:
         firehose_client = boto3.client('firehose', region_name=AWS_REGION)
@@ -48,10 +44,9 @@ def upload_batch_to_firehose(records_batch):
     logging.info(f"Attempting to upload batch of {batch_size} records to Firehose stream: {FIREHOSE_STREAM_NAME}")
 
     try:
-        # Firehose PutRecordBatch limit is 500 records / 4MB
         if batch_size > 500:
             logging.warning(f"Batch size ({batch_size}) exceeds Firehose limit (500). Uploading only first 500.")
-            records_batch = records_batch[:500] # Simple truncation, could split instead
+            records_batch = records_batch[:500] 
 
         response = firehose_client.put_record_batch(
             DeliveryStreamName=FIREHOSE_STREAM_NAME,
@@ -61,7 +56,6 @@ def upload_batch_to_firehose(records_batch):
         failed_count = response.get('FailedPutCount', 0)
         if failed_count > 0:
             logging.error(f"Firehose put_record_batch failed for {failed_count} records.")
-            # Implement more detailed error inspection from response['RequestResponses'] if needed
             return False
         else:
             logging.info(f"Successfully uploaded {len(records_batch)} records to {FIREHOSE_STREAM_NAME}.")
@@ -85,7 +79,6 @@ def fetch_historical_data_from_s3(date_str):
 
     try:
         target_date = datetime.strptime(date_str, '%Y-%m-%d')
-        # Adjust prefix based on your Firehose S3 partitioning scheme
         s3_prefix = f"data/{target_date.strftime('%Y/%m/%d')}/"
         logging.info(f"Fetching historical data from s3://{S3_BUCKET_NAME}/{s3_prefix}")
 
@@ -125,16 +118,15 @@ def fetch_historical_data_from_s3(date_str):
                     logging.exception(f"Unexpected error processing S3 object {s3_key}: {e}") # Log S3 key
 
         logging.info(f"Processed {object_count} S3 objects, fetched {len(all_readings)} historical records for {date_str}.")
-        # Sort by timestamp for chronological order
         all_readings.sort(key=lambda x: x.get('timestamp', ''))
         return all_readings
 
     except ValueError:
         logging.error(f"Invalid date format provided: {date_str}. Use YYYY-MM-DD.")
-        return None # Indicate format error
+        return None 
     except ClientError as e:
         logging.error(f"AWS ClientError accessing S3 bucket {S3_BUCKET_NAME}: {e}")
-        return None # Indicate AWS error
+        return None 
     except Exception as e:
         logging.exception(f"Unexpected error fetching historical data for {date_str}: {e}")
-        return None # Indicate general error
+        return None 

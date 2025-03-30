@@ -28,26 +28,18 @@ def get_historical():
         return jsonify({"error": "Missing 'date' query parameter (YYYY-MM-DD)"}), 400
 
     try:
-        # Call the function from cloud_services
         historical_data = cloud_services.fetch_historical_data_from_s3(date_str)
 
         if historical_data is not None:
-            # Successfully fetched data (could be an empty list if no data for that day)
             return jsonify(historical_data)
         else:
-            # An error occurred during fetch (already logged in cloud_services)
-            # Distinguish between "not found" (empty list) and actual error if needed
-            # For simplicity, return 500 for any None return
+
             return jsonify({"error": f"Failed to retrieve data for {date_str}. Check service logs."}), 500
     except Exception as e:
-        # Catch unexpected errors in the API layer itself
         logging.exception(f"Error in /historical endpoint handler: {e}")
         return jsonify({"error": "An internal server error occurred."}), 500
 
 @app.route('/health', methods=['GET'])
 def health_check():
     """ Basic health check endpoint. """
-    # Can be expanded later to check thread status, DB connection, etc.
     return jsonify({"status": "ok", "timestamp": datetime.now(timezone.utc).isoformat()}), 200
-
-# Note: We don't run the app here. main.py will import 'app' and run it.
