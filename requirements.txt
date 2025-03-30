@@ -1,0 +1,5 @@
+pyserial
+Flask
+Flask-CORS
+boto3
+python-dotenv
