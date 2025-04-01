@@ -36,7 +36,7 @@ def add_reading(weight):
 
     try:
         with log_file_lock:
-            with open(LOG_FILE_NAME, 'a') as f:
+            with open(LOG_FILE_NAME, 'w') as f:
                 json.dump(reading_data, f)
                 f.write('\n')
     except IOError as e:

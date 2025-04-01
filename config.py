@@ -3,9 +3,10 @@ import os
 import logging
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(dotenv_path='.env')
 
-SERIAL_PORT = os.getenv('SERIAL_PORT', 'COM4')
+SERIAL_PORT = os.getenv('SERIAL_PORT')
+print("Serial Port:", SERIAL_PORT)
 BAUDRATE = int(os.getenv('BAUDRATE', 9600))
 SERIAL_TIMEOUT = int(os.getenv('SERIAL_TIMEOUT', 1)) 
 
